@@ -1,12 +1,10 @@
 import express from 'express';
-import books from './db.js'; 
-const app = express();
-const PORT = 5000;
+import books from '../db.js';
 
-app.use(express.json());
+const router = express.Router();
 
-
-app.get('/books', (req, res) => {
+// 1. קבלת ספרים (כולל סינון ודפדוף)
+router.get('/', (req, res) => {
     const { category, page, limit } = req.query;
     let filteredBooks = [...books];
 
@@ -16,40 +14,28 @@ app.get('/books', (req, res) => {
         );
     }
 
-    const currentPage = parseInt(page) || 1;
-    const currentLimit = parseInt(limit) || 5;
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = pageNum * limitNum;
 
-    const startIndex = (currentPage - 1) * currentLimit;
-    const endIndex = startIndex + currentLimit;
     const paginatedBooks = filteredBooks.slice(startIndex, endIndex);
 
     res.json({
         totalItems: filteredBooks.length,
-        page: currentPage,
-        limit: currentLimit,
-        totalPages: Math.ceil(filteredBooks.length / currentLimit),
-        data: paginatedBooks
+        totalPages: Math.ceil(filteredBooks.length / limitNum),
+        currentPage: pageNum,
+        books: paginatedBooks
     });
 });
 
-app.get('/books/:code', (req, res) => {
-    const bookCode = req.params.code; // השוואה כמחרוזת
-    const book = books.find(b => b.code === bookCode);
-    
-    if (!book) {
-        return res.status(404).json({ message: "Book not found" });
-    }
-    res.json(book);
-});
-
-app.post('/books', (req, res) => {
+// 2. הוספת ספר חדש
+router.post('/', (req, res) => {
     const { title, category } = req.body;
     if (!title || !category) {
         return res.status(400).json({ message: "Title and category are required" });
-    }
-    
+    }   
     const newCode = books.length > 0 ? (Math.max(...books.map(b => parseInt(b.code))) + 1).toString() : "101";
-    
     const newBook = {
         code: newCode,
         title,
@@ -61,16 +47,14 @@ app.post('/books', (req, res) => {
     res.status(201).json({ message: "Book added successfully!", book: newBook });
 });
 
-app.put('/books/:code', (req, res) => {
+// 3. עדכון פרטי ספר
+router.put('/:code', (req, res) => {
     const bookCode = req.params.code; 
-    const book = books.find(b => b.code === bookCode);
-    
+    const book = books.find(b => b.code === bookCode);  
     if (!book) {
         return res.status(404).json({ message: "Book not found" });
-    }
-    
-    const { title, category, price } = req.body;
-    
+    }   
+    const { title, category, price } = req.body;    
     if (title) book.title = title;
     if (category) book.category = category;
     if (price) book.price = price;
@@ -78,23 +62,20 @@ app.put('/books/:code', (req, res) => {
     res.status(200).json({ message: "Book updated successfully!", book });
 });
 
-app.post('/books/:code/borrow', (req, res) => {
+// 4. השאלת ספר
+router.post('/:code/borrow', (req, res) => {
     const bookCode = req.params.code; 
     const { customerId } = req.body;
-    
     if (!customerId) {
         return res.status(400).json({ message: "Customer ID is required" });
     }
-    
     const book = books.find(b => b.code === bookCode);
     if (!book) {
         return res.status(404).json({ message: "Book not found" });
-    }
-    
+    } 
     if (book.isBorrowed) {
         return res.status(400).json({ message: "This book is already borrowed" }); 
-    }
-    
+    }  
     book.isBorrowed = true;
     book.borrowHistory.push({
         borrowDate: new Date().toISOString().split('T')[0], 
@@ -103,7 +84,8 @@ app.post('/books/:code/borrow', (req, res) => {
     res.status(200).json({ message: "Book borrowed successfully!", book });
 });
 
-app.post('/books/:code/return', (req, res) => {
+// 5. החזרת ספר
+router.post('/:code/return', (req, res) => {
     const bookCode = req.params.code; 
     const book = books.find(b => b.code === bookCode);
     
@@ -119,7 +101,8 @@ app.post('/books/:code/return', (req, res) => {
     res.status(200).json({ message: "Book returned successfully!", book });
 });
 
-app.delete('/books/:code', (req, res) => {
+// 6. מחיקת ספר
+router.delete('/:code', (req, res) => {
     const bookCode = req.params.code; 
     const bookIndex = books.findIndex(b => b.code === bookCode);
     
@@ -130,6 +113,4 @@ app.delete('/books/:code', (req, res) => {
     res.json({ message: "Book deleted successfully" });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+export default router;
