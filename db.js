@@ -21,3 +21,4 @@ export let books = [
     ]
   }
 ];
+export default books;
