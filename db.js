@@ -1,6 +1,4 @@
-// db.js
-
-const books = [
+export let books = [
   {
     code: "101",
     title: "The Great Gatsby",
@@ -23,7 +21,3 @@ const books = [
     ]
   }
 ];
-
-module.exports = {
-  books
-};
