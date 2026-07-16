@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import currentDate from './middlewares/currentDate.js';
 import logGetRequests from './middlewares/logGetRequests.js';
+import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
 const PORT = 5000;
@@ -24,7 +25,7 @@ app.use(express.json());
 app.use(logger);
 app.use(currentDate);
 app.use(logGetRequests);
-
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
