@@ -42,6 +42,54 @@ app.post('/books', (req, res) => {
 });
 
 
+app.put('/books/:code', (req, res) => {
+    const bookCode = req.params.code; 
+    const book = books.find(b => b.code === bookCode);
+    if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+    }
+    const { title, category, price } = req.body;
+    if (title) book.title = title;
+    if (category) book.category = category;
+    if (price) book.price = price;
+    res.status(200).json({ message: "Book updated successfully!", book });
+});
+
+app.post('/books/:code/borrow', (req, res) => {
+    const bookCode = req.params.code; 
+    const { customerId } = req.body;
+    if (!customerId) {
+    return res.status(400).json({ message: "Customer ID is required" });
+}
+    const book = books.find(b => b.code === bookCode);
+    if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+    }
+if (book.isBorrowed) {
+    return res.status(400).json({ message: "This book is already borrowed" }); 
+}
+book.isBorrowed = true;
+book.borrowHistory.push({
+    borrowDate: new Date().toISOString().split('T')[0], 
+    customerId: customerId
+});
+res.status(200).json({ message: "Book borrowed successfully!", book });
+});
+
+app.post('/books/:code/return',(req,res) => {
+     const bookCode = req.params.code; 
+    const book = books.find(b => b.code === bookCode);
+    if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+    }
+if (!book.isBorrowed) {
+    return res.status(400).json({ message: "This book is not  borrowed" }); 
+}
+book.isBorrowed = false;
+res.status(200).json({ message: "Book return successfully!", book });
+});
+
+
 app.delete('/books/:code', (req, res) => {
     const bookCode = parseInt(req.params.code);
     const bookIndex = books.findIndex(b => b.code === bookCode);
