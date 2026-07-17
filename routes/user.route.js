@@ -1,18 +1,18 @@
 import express from 'express';
 import users from '../users.js'; 
 
+import validateBody from '../middlewares/validationMiddleware.js';
+import { userSchema } from '../validators/userValidator.js';
+
 const router = express.Router();
 
 router.get('/', (req, res) => {
     res.json(users);
 });
 
-router.post('/signup', (req, res) => {
+// שילוב בדיקת התקינות רגע לפני שיוצרים משתמש חדש
+router.post('/signup', validateBody(userSchema), (req, res) => {
     const { username, email, password } = req.body;
-
-    if (!username || !email || !password) {
-        return res.status(400).json({ message: "All fields are required" });
-    }
 
     const newCode = users.length > 0 ? 
     (Math.max(...users.map(u => parseInt(u.code))) + 1).toString() : "1";
