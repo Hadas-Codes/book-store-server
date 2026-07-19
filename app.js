@@ -9,12 +9,16 @@ import currentDate from './middlewares/currentDate.js';
 import logGetRequests from './middlewares/logGetRequests.js';
 import errorHandler from './middlewares/errorHandler.js';
 
+import connectDB from './config/db.js';
+
 const app = express();
 const PORT = 5000;
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,  
     limit: 100, 
 });
+
+connectDB();
 
 app.use('/api', apiRouter);
 app.use(helmet()); 
