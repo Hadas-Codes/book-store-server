@@ -42,8 +42,38 @@ const userSchema = new Schema(
     },
     {
         timestamps: true, 
+        toJSON: {
+            transform: (doc, ret) => {
+                ret.id = ret._id;   
+                delete ret._id;   
+                delete ret.password; 
+                delete ret.__v;    
+            }
+        }
     }
 );
+
+
+import bcrypt from 'bcrypt';
+
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+//  פונקציה לבדיקת התאמת סיסמה
+userSchema.methods.comparePassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
 
 export const User = model('User', userSchema);
 export default User;
