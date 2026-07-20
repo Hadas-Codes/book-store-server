@@ -6,8 +6,8 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import currentDate from './middlewares/currentDate.js';
-import logGetRequests from './middlewares/logGetRequests.js';
 import errorHandler from './middlewares/errorHandler.js';
+import logGetRequests from './controllers/logGetRequests.js';
 
 import connectDB from './config/db.js';
 
